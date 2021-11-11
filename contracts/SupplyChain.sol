@@ -1,23 +1,38 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.5.16 <0.9.0;
+pragma solidity >=0.6.0 <0.9.0;
 
 contract SupplyChain {
 
   // <owner>
+  address public owner;
 
   // <skuCount>
-
+  uint public skuCount;
   // <items mapping>
 
   // <enum State: ForSale, Sold, Shipped, Received>
+  enum State{ ForSale, Sold, Shipped, Received}
 
   // <struct Item: name, sku, price, state, seller, and buyer>
+  struct Item{
+    string name;
+    uint sku;
+    uint price;
+    State state;
+    address payable seller;
+    address payable buyer;
+  }
+  mapping (uint => Item) public items;
   
   /* 
    * Events
    */
 
   // <LogForSale event: sku arg>
+  event LogForSale(uint sku);
+  event LogSold(uint sku);
+  event LogShipped(uint sku);
+  event LogReceived(uint sku);
 
   // <LogSold event: sku arg>
 
@@ -68,6 +83,8 @@ contract SupplyChain {
   constructor() public {
     // 1. Set the owner to the transaction sender
     // 2. Initialize the sku count to 0. Question, is this necessary?
+    owner = msg.sender;
+    skuCount = 0;
   }
 
   function addItem(string memory _name, uint _price) public returns (bool) {
@@ -77,18 +94,18 @@ contract SupplyChain {
     // 4. return true
 
     // hint:
-    // items[skuCount] = Item({
-    //  name: _name, 
-    //  sku: skuCount, 
-    //  price: _price, 
-    //  state: State.ForSale, 
-    //  seller: msg.sender, 
-    //  buyer: address(0)
-    //});
+    items[skuCount] = Item({
+     name: _name, 
+     sku: skuCount, 
+     price: _price, 
+     state: State.ForSale, 
+     seller: payable(msg.sender), 
+     buyer: payable(address(0))
+    });
     //
-    //skuCount = skuCount + 1;
-    // emit LogForSale(skuCount);
-    // return true;
+    skuCount = skuCount + 1;
+    emit LogForSale(skuCount);
+    return true;
   }
 
   // Implement this buyItem function. 
@@ -119,15 +136,15 @@ contract SupplyChain {
   function receiveItem(uint sku) public {}
 
   // Uncomment the following code block. it is needed to run tests
-  /* function fetchItem(uint _sku) public view */ 
-  /*   returns (string memory name, uint sku, uint price, uint state, address seller, address buyer) */ 
-  /* { */
-  /*   name = items[_sku].name; */
-  /*   sku = items[_sku].sku; */
-  /*   price = items[_sku].price; */
-  /*   state = uint(items[_sku].state); */
-  /*   seller = items[_sku].seller; */
-  /*   buyer = items[_sku].buyer; */
-  /*   return (name, sku, price, state, seller, buyer); */
-  /* } */
+  function fetchItem(uint _sku) public view
+    returns (string memory name, uint sku, uint price, uint state, address seller, address buyer)
+  {
+    name = items[_sku].name;
+    sku = items[_sku].sku;
+    price = items[_sku].price;
+    state = uint(items[_sku].state);
+    seller = items[_sku].seller;
+    buyer = items[_sku].buyer;
+    return (name, _sku, price, state, seller, buyer);
+  }
 }
